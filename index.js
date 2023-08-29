@@ -68,8 +68,15 @@ function printMochaStatements(code) {
   walkNode(ast, (node) => {
     if (isMochaStatement(node) && node.arguments.length > 0) {
       const arg = node.arguments[0];
-      if (arg.type === 'Literal') {
-        printStatement(node.callee.name, arg.value, indentLevel);
+      if (arg.type === 'Literal' || arg.type === 'TemplateLiteral') {
+        let statement = '';
+        if (arg.type === 'TemplateLiteral') {
+          statement = arg.quasis.map((q) => q.value.raw).join('');
+        } else {
+          statement = arg.value;
+        }
+
+        printStatement(node.callee.name, statement, indentLevel);
       }
       if (isDescribeOrContext(node)) {
         indentLevel++;
