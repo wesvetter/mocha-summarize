@@ -1,6 +1,7 @@
 // Run with `node index.js <file path>`
 const esprima = require('esprima');
 const fs = require('fs');
+const chalk = require('chalk');
 
 function printMochaStatementsFromFile(filePath) {
   const code = fs.readFileSync(filePath, 'utf8');
@@ -25,24 +26,21 @@ function isDescribeOrContext(node) {
 
 function printStatement(mochaFunctionName, statement, indent) {
   const padding = '  '.repeat(indent);
-  let prefix = '';
+  let line = '';
   if (mochaFunctionName === 'describe') {
-    prefix += 'describe: ';
+    line += chalk.bold(statement);
   } else if (mochaFunctionName === 'context') {
-    prefix += '- ';
+    line += '- ';
+    line += chalk.italic(statement);
   } else if (mochaFunctionName === 'it') {
-    prefix += '  it ';
+    line += chalk.green(`  it ${statement}`);
   }
-  console.log(`${indent}${prefix}${statement}`);
+  console.log(`${padding}${line}`);
 }
 
 function printMochaStatements(code) {
   const ast = esprima.parseScript(code);
   let indentLevel = 0;
-
-  function getIndentation() {
-    return '  '.repeat(indentLevel);
-  }
 
   function walkNode(node, callback) {
     callback(node);
@@ -66,7 +64,7 @@ function printMochaStatements(code) {
     if (isMochaStatement(node) && node.arguments.length > 0) {
       const arg = node.arguments[0];
       if (arg.type === 'Literal') {
-        printStatement(node.callee.name, arg.value, getIndentation());
+        printStatement(node.callee.name, arg.value, indentLevel);
       }
       if (isDescribeOrContext(node)) {
         indentLevel++;

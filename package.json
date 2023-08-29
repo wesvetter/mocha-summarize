@@ -9,6 +9,7 @@
   "author": "Wes Vetter <wesvetter@gmail.com> (https://wesvetter.com/)",
   "license": "MIT",
   "dependencies": {
+    "chalk": "4.1.2",
     "esprima": "4.0.1"
   }
 }
