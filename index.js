@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Run with `node index.js <file path>`
 const espree = require("espree");
 const fs = require('fs');
