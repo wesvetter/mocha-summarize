@@ -1,5 +1,5 @@
 // Run with `node index.js <file path>`
-const esprima = require('esprima');
+const espree = require("espree");
 const fs = require('fs');
 const chalk = require('chalk');
 
@@ -39,7 +39,11 @@ function printStatement(mochaFunctionName, statement, indent) {
 }
 
 function printMochaStatements(code) {
-  const ast = esprima.parseScript(code);
+  const ast = espree.parse(code, {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+  });
+
   let indentLevel = 0;
 
   function walkNode(node, callback) {

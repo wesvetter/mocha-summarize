@@ -10,6 +10,6 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "4.1.2",
-    "esprima": "4.0.1"
+    "espree": "9.6.1"
   }
 }
