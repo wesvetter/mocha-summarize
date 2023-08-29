@@ -1,9 +1,39 @@
+// Run with `node index.js <file path>`
 const esprima = require('esprima');
 const fs = require('fs');
 
 function printMochaStatementsFromFile(filePath) {
   const code = fs.readFileSync(filePath, 'utf8');
   printMochaStatements(code);
+}
+
+function isMochaStatement(node) {
+  return (
+    node.type === 'CallExpression' &&
+    node.callee.type === 'Identifier' &&
+    ['describe', 'context', 'it'].includes(node.callee.name)
+  );
+}
+
+function isDescribeOrContext(node) {
+  return (
+    node.type === 'CallExpression' &&
+    node.callee.type === 'Identifier' &&
+    ['describe', 'context'].includes(node.callee.name)
+  );
+}
+
+function printStatement(mochaFunctionName, statement, indent) {
+  const padding = '  '.repeat(indent);
+  let prefix = '';
+  if (mochaFunctionName === 'describe') {
+    prefix += 'describe: ';
+  } else if (mochaFunctionName === 'context') {
+    prefix += '- ';
+  } else if (mochaFunctionName === 'it') {
+    prefix += '  it ';
+  }
+  console.log(`${indent}${prefix}${statement}`);
 }
 
 function printMochaStatements(code) {
@@ -27,43 +57,31 @@ function printMochaStatements(code) {
     }
 
     // Decrement indent level after exiting a describe or context block.
-    if (node.type === 'CallExpression' && node.callee.type === 'Identifier') {
-      const { name } = node.callee;
-      if (
-        ['describe', 'context'].includes(name)
-      ) {
-        indentLevel--;
-      }
+    if (isDescribeOrContext(node)) {
+      indentLevel--;
     }
   }
 
   walkNode(ast, (node) => {
-    if (node.type === 'CallExpression' && node.callee.type === 'Identifier') {
-      const { name } = node.callee;
-      if (
-        ['describe', 'context', 'it'].includes(name) &&
-        node.arguments.length > 0
-      ) {
-        const arg = node.arguments[0];
-        if (arg.type === 'Literal') {
-          console.log(`${getIndentation()}${name}: ${arg.value}`);
-          if (name === 'describe' || name === 'context') {
-            indentLevel++;
-          }
-        }
+    if (isMochaStatement(node) && node.arguments.length > 0) {
+      const arg = node.arguments[0];
+      if (arg.type === 'Literal') {
+        printStatement(node.callee.name, arg.value, getIndentation());
       }
-    } else if (
-      node.type === 'FunctionExpression' &&
-      node.parent &&
-      node.parent.type === 'CallExpression'
-    ) {
-      const parentName = node.parent.callee.name;
-      if (['describe', 'context'].includes(parentName)) {
-        indentLevel--;
+      if (isDescribeOrContext(node)) {
+        indentLevel++;
       }
     }
   });
 }
 
-const filePath = '../api/src/t/j/r/renew-actions.js';
+function getFilePathArgument() {
+  const args = process.argv.slice(2);
+  if (args.length === 0) {
+    throw new Error('Please provide a file path as an argument.');
+  }
+  return args[0];
+}
+
+const filePath = getFilePathArgument();
 printMochaStatementsFromFile(filePath);
